@@ -37,39 +37,60 @@ npm install
 npm run dev
 ```
 
-Open <http://127.0.0.1:3000/keystatic/setup>. Use `127.0.0.1`, not `localhost` —
-the GitHub OAuth callback is registered against that host.
+Open <http://127.0.0.1:3000/keystatic>. With no credentials present it lands on
+Keystatic's setup screen.
 
-Keystatic walks you through creating the GitHub App, then writes the credentials
-into a local `.env` file (already gitignored). Install the App on the
-`knowledge-base` repo when prompted.
+Use `127.0.0.1` rather than `localhost` — `@keystatic/next` normalises the host
+to `127.0.0.1` before talking to GitHub, and that is the callback the App gets
+registered with.
+
+The setup form has two fields:
+
+- **Organization** — leave blank to create the App on your personal account.
+- **Deployed URL** — enter your Vercel URL (e.g.
+  `https://knowledge-base.vercel.app`). Keystatic then registers the production
+  callback alongside the local one. Skipping it means editing the App's settings
+  after you deploy, so it is worth filling in now even if the URL is a guess.
+
+Submitting creates a GitHub App named `fltanveer Keystatic` with `contents:
+write`, `metadata: read` and `pull_requests: read`, redirects back to the app,
+and writes the four credentials into a `.env` file (already gitignored). Install
+the App on the `knowledge-base` repo when prompted.
 
 ### Manual setup
 
 Create a GitHub App at <https://github.com/settings/apps/new> with:
 
-- **Callback URL** — `https://<your-domain>/api/keystatic/github/oauth/callback`
-  (add `http://127.0.0.1:3000/api/keystatic/github/oauth/callback` as a second
-  callback URL for local development)
+- **Callback URLs** — add each host you will use:
+  - `http://127.0.0.1:3000/api/keystatic/github/oauth/callback`
+  - `https://<your-domain>/api/keystatic/github/oauth/callback`
 - **Request user authorization (OAuth) during installation** — enabled
 - **Webhook → Active** — disabled
-- **Repository permissions** — Contents: read & write, Pull requests: read &
-  write, Metadata: read-only
+- **Repository permissions** — Contents: read & write; Metadata: read-only;
+  Pull requests: read-only
 
-Then copy `.env.example` to `.env` and fill in the four required values.
+Then copy `.env.example` to `.env` and fill in the four values. Install the App
+on the repo.
 
 ### Deploying to Vercel
 
 Add the same four variables under **Project → Settings → Environment
-Variables**, and add your production callback URL to the GitHub App. Vercel's
-default Git integration already redeploys on pushes to `main`, which is what
-publishes Keystatic's commits — no extra webhook needed.
+Variables**. Vercel's default Git integration already redeploys on pushes to
+`main`, which is what publishes Keystatic's commits — no extra webhook needed.
 
 > `next build` **fails** in GitHub mode if `KEYSTATIC_GITHUB_CLIENT_ID`,
 > `KEYSTATIC_GITHUB_CLIENT_SECRET` and `KEYSTATIC_SECRET` are missing — the
 > Keystatic API route validates them while collecting page data. Set them for
 > the Production, Preview and Development environments, or the build breaks
 > before it reaches the content.
+
+### Troubleshooting
+
+**"Be careful! The `redirect_uri` is not associated with this application."**
+The App has no callback URL registered for the host you are on. Open the App's
+settings → **Add Callback URL** → add
+`https://<host>/api/keystatic/github/oauth/callback` and save. This is the usual
+symptom of deploying without having filled in **Deployed URL** during setup.
 
 ## Editing without GitHub
 
