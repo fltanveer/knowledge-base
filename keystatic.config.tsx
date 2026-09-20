@@ -9,16 +9,22 @@ const imagePositions = [
 ] as const;
 
 export default config({
+  // Content lives in GitHub. Saving in Keystatic commits straight to the repo,
+  // Vercel redeploys on that push, and src/lib/reader.ts reads the committed
+  // files off disk during the build - so Markdoc documents and the images
+  // uploaded alongside them go live in the same deploy.
+  // Set NEXT_PUBLIC_KEYSTATIC_STORAGE=local to edit the working copy instead
+  // (offline work, or before the GitHub App has been created).
   storage:
-    process.env.NODE_ENV === "production"
-      ? {
+    process.env.NEXT_PUBLIC_KEYSTATIC_STORAGE === "local"
+      ? { kind: "local" }
+      : {
           kind: "github",
           repo: {
-            owner: process.env.NEXT_PUBLIC_KEYSTATIC_GITHUB_OWNER!,
-            name: process.env.NEXT_PUBLIC_KEYSTATIC_GITHUB_REPO!,
+            owner: process.env.NEXT_PUBLIC_KEYSTATIC_GITHUB_OWNER || "fltanveer",
+            name: process.env.NEXT_PUBLIC_KEYSTATIC_GITHUB_REPO || "knowledge-base",
           },
-        }
-      : { kind: "local" },
+        },
   collections: {
     sections: collection({
       label: "Sections",
